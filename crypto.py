@@ -3,6 +3,9 @@ import robin_stocks
 from robin_stocks import *
 import robin_stocks as r
 
+import os
+from dotenv import load_dotenv
+
 
 
 
@@ -59,7 +62,11 @@ epoc = 0
 
 ema_diff = 0
 
-login = r.login('','')
+load_dotenv()
+EMAIL = os.getenv('EMAIL')
+PASSWORD = os.getenv('PASSWORD')
+
+login = r.login(EMAIL, PASSWORD)
 
 
 def current_time():
