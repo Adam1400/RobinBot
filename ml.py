@@ -6,12 +6,10 @@ import robin_stocks as r
 import os
 from dotenv import load_dotenv
 
-import ta
+from tensortrade import *
 
 import pandas as pd
 from pandas import *
-
-import tensortrade.env.default as default
 
 import ta
 
@@ -19,7 +17,6 @@ import pandas as pd
 import tensortrade.env.default as default
 
 from tensortrade.data.cdd import CryptoDataDownload
-from tensortrade.env.generic import environment
 
 from tensortrade.feed.core import Stream, DataFeed, NameSpace
 from tensortrade.oms.instruments import USD, BTC
@@ -27,8 +24,7 @@ from tensortrade.oms.wallets import Wallet, Portfolio
 from tensortrade.oms.exchanges import Exchange
 from tensortrade.oms.services.execution.simulated import execute_order
 from tensortrade.agents import DQNAgent
-import tensortrade.env.default as default
-from tensortrade import *
+
 
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
@@ -51,7 +47,7 @@ price_data = robin_stocks.crypto.get_crypto_quote('BTC')
 btc_data = []
 for key in btc_historicals:
     data = {
-    'date' : pd.to_datetime(key['begins_at']),
+    'date' : float(key['begins_at'].replace('T', '').replace('Z', '').replace(':', '').replace('-', '')),
     'open' : float(key['open_price']),
     'high' : float(key['high_price']),
     'low' : float(key['low_price']),
@@ -80,9 +76,6 @@ with NameSpace("robinhood"):
         Stream.source(list(robinhood_btc[c]), dtype="float").rename(c) for c in robinhood_btc.columns
     ]
 
-feed = DataFeed(robinhood_stream)
-
-feed.next()
 
 def buying_power():
     profile = robin_stocks.load_phoenix_account(info=None)
@@ -145,7 +138,7 @@ features = [
     macd(cp, fast=10, slow=20, signal=5).rename("macd"),
 ]
 
-feed = DataFeed(features)
+feed = DataFeed(features + robinhood_stream)
 feed.compile()
 
 
@@ -173,10 +166,9 @@ env.observer.feed.next()
 
 agent = DQNAgent(env)
 
-agent.train(n_episodes=2, n_steps=1000, render_interval=500, save_path="agents/")
+agent.train(n_episodes=2, n_steps=300, render_interval=300, save_path="agents/")
 
 print(portfolio.net_worth)
-
 
 
 
