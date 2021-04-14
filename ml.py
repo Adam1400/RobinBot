@@ -14,9 +14,11 @@ from pandas import *
 import ta
 
 import pandas as pd
+from tensortrade.agents.agent import Agent
 import tensortrade.env.default as default
 
 from tensortrade.data.cdd import CryptoDataDownload
+from tensortrade.env.default.renderers import ScreenLogger
 
 from tensortrade.feed.core import Stream, DataFeed, NameSpace
 from tensortrade.oms.instruments import USD, BTC
@@ -40,8 +42,8 @@ login = r.login(EMAIL, PASSWORD)
 interval = '5minute'
 span = 'day' 
 
-btc_historicals = robin_stocks.get_crypto_historicals('BTC', interval, span)
-price_data = robin_stocks.crypto.get_crypto_quote('BTC')
+btc_historicals = robin_stocks.get_crypto_historicals('DOGE', interval, span)
+price_data = robin_stocks.crypto.get_crypto_quote('DOGE')
 
     
 btc_data = []
@@ -106,39 +108,7 @@ portfolio = Portfolio(USD, [
 ])
 
 
-data = pd.DataFrame.from_dict(btc_data)
-
-
-def rsi(price: Stream[float], period: float) -> Stream[float]:
-    r = price.diff()
-    upside = r.clamp_min(0).abs()
-    downside = r.clamp_max(0).abs()
-    rs = upside.ewm(alpha=1 / period).mean() / downside.ewm(alpha=1 / period).mean()
-    return 100*(1 - (1 + rs) ** -1)
-
-
-def macd(price: Stream[float], fast: float, slow: float, signal: float) -> Stream[float]:
-    fm = price.ewm(span=fast, adjust=False).mean()
-    sm = price.ewm(span=slow, adjust=False).mean()
-    md = fm - sm
-    signal = md - md.ewm(span=signal, adjust=False).mean()
-    return signal
-
-
-features = []
-for c in data.columns[1:]:
-    s = Stream.source(list(data[c]), dtype="float").rename(data[c].name)
-    features += [s]
-
-cp = Stream.select(features, lambda s: s.name == "close")
-
-features = [
-    cp.log().diff().rename("lr"),
-    rsi(cp, period=10).rename("rsi"),
-    macd(cp, fast=10, slow=20, signal=5).rename("macd"),
-]
-
-feed = DataFeed(features + robinhood_stream)
+feed = DataFeed(robinhood_stream)
 feed.compile()
 
 
@@ -166,9 +136,10 @@ env.observer.feed.next()
 
 agent = DQNAgent(env)
 
-agent.train(n_episodes=2, n_steps=300, render_interval=300, save_path="agents/")
+agent.train(n_episodes=2, n_steps=288, render_interval=288)
 
-print(portfolio.net_worth)
+
+
 
 
 

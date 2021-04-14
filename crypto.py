@@ -305,8 +305,6 @@ def scalp_check():
             print()
             candle +=1
 
-
-
     
 
 def buying_power():
@@ -464,7 +462,7 @@ def document(type, condition, ammount):
         p = str(current_time()) + " | " + condition + " ==> " + type + " | profit ==> $" + str(ammount) +"\n"  
 
     print(condition, type)
-    f = open(ticker+'-scalpe-test.txt', "a")
+    f = open(ticker+'-transactions.txt', "a")
     f.write(p)
     f.close()
 
@@ -486,40 +484,39 @@ def get_gains():
 
 def trade():
     global bought
+
+    #BULLISH ON DOGE STRAT... 
     
     """
     BUY RULES
     """
     if(bought == False):
         print("waiting for entery", ema_diff)
-        scalp_check()
+        if(cross_up == True):
+            buy("EMA cross up")
         
 
     """
     SELL RULES
     """
+   
     if(bought == True):
-        print("waiting for sell", ema_diff, "| or if candle closes below", swing_low, "| gains ==>", gains)
-        
-        if(current_market_price > entery and ema_diff < -5):
+        print("waiting for sell", ema_diff, "| gains ==>", gains) 
+        if(current_ask_price >= entery + .01 and cross_down == True):
             sell("EMA cross down")
+            #take no L's
 
-        
-        if(current_close_price <= swing_low):
-            sell("stop loss triggred")
-        
-        
-        
+
+
     sys.stdout.flush()
 
 
 
 
-ticker = "BTC"
+ticker = "DOGE"
 
 # check if you are already in
 state_check()
-
 
 while(True):
    
@@ -553,7 +550,11 @@ while(True):
         tradet.join()
 
         #need epoc to reduce internet usage lamo
-        epoc = round(abs(ema_diff))
+        weight = 1
+        if current_market_price < 1:
+            weight = 30000
+
+        epoc = round(abs(ema_diff * weight))
         for x in range(epoc):
             time.sleep(1)
             print(".", end="")
