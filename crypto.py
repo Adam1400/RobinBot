@@ -475,6 +475,7 @@ def get_gains():
         if(starting_amount < 6):
             starting_amount = get_crypto_entery(ticker) 
         
+        #returns daily gains (not total gains)
         gains = round((crypto_position(ticker) - starting_amount), 2)
         
     else:
