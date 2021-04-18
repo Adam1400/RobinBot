@@ -333,7 +333,6 @@ def state_check():
     global bought
     global entery
     global starting_amount
-    global swing_low
 
     get_historicals()
     get_quote()
@@ -342,9 +341,6 @@ def state_check():
     if(crypto_position(ticker) > 6):
         bought = True
         entery = starting_amount * (current_market_price / crypto_position(ticker))
-        swing_low = ti.min(close_price_historicals, 12)[-1]
-        if(entery < swing_low):
-            swing_low = (entery + swing_low)/2
     else:
         bought = False
 
@@ -504,7 +500,7 @@ def trade():
    
     if(bought == True):
         print("waiting for sell", ema_diff, "| gains ==>", gains) 
-        if(current_ask_price >= entery + .01 and cross_down == True):
+        if(gains > 10 and cross_down == True):
             sell("EMA cross down")
             #take no L's
 
